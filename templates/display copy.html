@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Layout</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            overflow-y: scroll; /* Enable scrolling */
+        }
+
+        .a4-sheet-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .a4-sheet {
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10mm; /* Space between pages */
+            page-break-after: always; /* Force page break after each sheet */
+        }
+
+        .section {
+            box-sizing: border-box;
+            border: 1px dashed black;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header, .content, .voters-data {
+            box-sizing: border-box;
+            padding: 5px;
+        }
+
+        .header {
+            background: radial-gradient(circle, #f24384, #f24384);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+        }
+
+        .header img {
+            width: 100%;
+            height: auto;
+        }
+
+        .content {
+            background: radial-gradient(circle, #f24384, #f24384);
+            color: white;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5px;
+            font-size: 0.9em;
+        }
+
+        .voters-data {
+            background-color: white;
+            color: black;
+            border-top: 1px dashed;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+            font-size: 0.8em;
+        }
+
+        .voters-data .table {
+            text-align: left;
+        }
+
+        .voters-data .table p {
+            margin: 2px 0;
+        }
+
+        .aligned-text {
+            margin: 1px 0px 0px 30px;
+            padding-left: 10px;
+            text-align: left;
+        }
+
+        .aligned-header {
+            color: black;
+            font-size: 2em;
+        }
+
+        @media print {
+            body {
+                display: block;
+                margin: 0;
+            }
+
+            .a4-sheet {
+                box-shadow: none;
+                margin: 0;
+                overflow: visible;
+            }
+
+            @page {
+                size: A4;
+                margin: 0;
+            }
+
+            /* Ensure each .a4-sheet starts on a new page */
+            .a4-sheet {
+                page-break-before: always;
+            }
+        }
+    </style>
+    <script>
+        // Automatically trigger print dialog once the page is fully loaded
+        window.onload = function() {
+            console.log("Total records filled: {{ data | length }}");
+            window.print();
+        };
+    </script>
+</head>
+<body>
+    <div class="a4-sheet-container">
+        {% for i in range(0, data|length, 4) %}
+        <div class="a4-sheet">
+            {% for j in range(0, 4) %}
+                {% if data[i + j] is defined %}
+                <div class="section">
+                    <div class="header">
+                        <img src="{{ url_for('static', filename='image.png') }}" alt="Combined Image">
+                    </div>
+                    <div class="content">
+                        <h3 class="aligned-header">BALLOT NO 11</h3>
+                        <p class="aligned-text">
+                            ·मेरा वजूद आपसे ही है<br>
+                            मेरा जीवन मेरे क्षेत्र की जनता के लिए है<br>
+                            मेरे कर्म जनता की सेवा के लिए है।<br>
+                            जो हमेशा रहेंगे।<br>
+                            आप विश्वास करके मुझे एक मौका दें।
+                        </p>
+                    </div>
+                    <div class="voters-data">
+                        <div class="table">
+                            <p>S NO: {{ data[i + j]['partSerialNumber'] }}</p>
+                            <p>NAME: {{ data[i + j]['fullNameL1'] }}</p>
+                            <p>RELATIVE NAME: {{ data[i + j]['relativeFullNameL1'] }}</p>
+                            <p>EPIC: {{ data[i + j]['epic'] }}</p>
+                            <p>AGE: {{ data[i + j]['Age'] }}</p>
+                            <p>ADDRESS: {{ data[i + j]['houseNo'] }}, {{ data[i + j]['psBuildingNameL1'] }}</p>
+                            <p>POLLING STATION: {{ data[i + j]['Part NameL1'] }}</p>
+                            <p>BOOTH NO: {{ data[i + j]['Part Number'] }}</p>
+                            <p>GENDER: {{ data[i + j]['Gender'] }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

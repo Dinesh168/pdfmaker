@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Pattern Layout</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+
+        .a4-sheet {
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: grid;
+            grid-template-rows: 1fr 1fr; /* Two rows for top and bottom */
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always; /* Force page break after each A4 sheet */
+        }
+
+        .section {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            border: 1px dashed black;
+            height: 100%; /* Each section takes up 50% of the page */
+        }
+
+        .left-content {
+            width: 50%;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            /* background-color: #f24384;*/
+            color: white;
+        }
+
+        .left-content img {
+            width: 100%;
+        }
+
+        .left-content .ballot-info {
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .right-content {
+            width: 50%;
+            padding: 10px;
+            background-color: white;
+            color: black;
+            font-size: 1.2em;
+            display: flex;
+            align-content: stretch;
+            flex-direction: column;
+            justify-content: space-evenly;
+        }
+
+        p.booth {
+            display: flex;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .right-content p {
+            margin: 5px 0;
+        }
+
+        .ballot-info h3 {
+            color: black;
+            font-size: 2em;
+            display: flex;
+            justify-content: center;
+        }
+
+        .ballot-info p {
+            font-size: 1.5em;
+            display: flex;
+            justify-content: center;
+        }
+
+        @media print {
+            body {
+                display: block;
+                margin: 0;
+            }
+
+            .a4-sheet {
+                box-shadow: none;
+                margin: 0;
+                overflow: visible;
+            }
+
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="a4Container">
+        <!-- A4 sheets will be inserted here dynamically -->
+    </div>
+
+    <script>
+        // Get the voter data from the server-side template
+        const data = {{ data | tojson }};
+
+        // Function to create a single content section with dynamic data
+        function createSection(voter) {
+            // Handle the address logic in JavaScript
+            let address = '';
+            if (voter.houseNo) {
+                address = `${voter.houseNo}, ${voter.SectionEN}`;
+            } else if (voter.SectionEN) {
+                address = `${voter.SectionEN}`;
+            }
+
+            return `
+                <div class="section">
+                    <div class="left-content">
+                        <img src="{{ url_for('static', filename='image.png') }}" alt="Candidate Image">
+                    </div>
+                    <div class="right-content">
+                        <p class="booth">BOOTH NO ${voter.PartNumber} - ${voter.partNameL1} </p>
+                        <p>S NO: ${voter.partSerialNumber}</p>
+                        <p>NAME: ${voter.fullNameL1}</p>
+                        <p>RELATIVE NAME: ${voter.relativeFullNameL1}</p>
+                        <p>EPIC: ${voter.epic}</p>
+                        <p>AGE: ${voter.Age}</p>
+                        <p>GENDER: ${voter.Gender}</p>
+                        <p>ADDRESS: ${address}</p>
+                    </div>
+                </div>`;
+        }
+
+        // Function to repeat the content and paginate it
+        function repeatSections(voters) {
+            const a4Container = document.getElementById('a4Container');
+            a4Container.innerHTML = ''; // Clear any existing sheets
+
+            // Calculate number of pages needed (2 sections per page)
+            const pages = Math.ceil(voters.length / 2);
+
+            for (let i = 0; i < pages; i++) {
+                // Create a new A4 sheet
+                const a4Sheet = document.createElement('div');
+                a4Sheet.className = 'a4-sheet';
+
+                // Add first section for the current page
+                a4Sheet.innerHTML += createSection(voters[i * 2]);
+
+                // Add second section only if the total count allows it
+                if (i * 2 + 1 < voters.length) {
+                    a4Sheet.innerHTML += createSection(voters[i * 2 + 1]);
+                }
+
+                // Append the A4 sheet to the container
+                a4Container.appendChild(a4Sheet);
+            }
+        }
+
+        // Call the function to create and repeat sections
+        repeatSections(data); // This will insert dynamic content based on the `data` passed from the server
+    </script>
+</body>
+</html>
